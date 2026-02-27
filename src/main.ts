@@ -1,3 +1,4 @@
+import Browser from 'webextension-polyfill'
 import './style.css'
 
 const app = document.getElementById('app')!
@@ -26,27 +27,28 @@ slider.addEventListener('input', () => {
   const value = Number(slider.value)
   display.textContent = `${value}%`
 
-  
-  })
+  sendToTab({ type: 'SET_VOLUME', volume: value / 100 })
 })
 
 document.getElementById('btn-play-pause')!.addEventListener('click', () => {
-  sendToTab('PLAY_PAUSE')
+  sendToTab({ type: 'PLAY_PAUSE' })
 })
 document.getElementById('btn-prev')!.addEventListener('click', () => {
-  sendToTab('PREV')
+  sendToTab({ type: 'PREV' })
 })
 document.getElementById('btn-next')!.addEventListener('click', () => {
-  sendToTab('NEXT')
+  sendToTab({ type: 'NEXT' })
 })
 document.getElementById('btn-mute')!.addEventListener('click', () => {
-  sendToTab('MUTE')
+  sendToTab({ type: 'MUTE' })
 })
 
-function sendToTab(command: string) {
-    const browserApi = (typeof browser !== 'undefined') ? browser : chrome
-
- 
-    }
-  })
+function sendToTab(message: object) {
+    const browserApi = (typeof Browser !== 'undefined' ? Browser : chrome)
+    browserApi.tabs.query({ active: true, currentWindow: true}, (tabs) => {
+        const tabId = tabs[0].id
+        if (tabId !== undefined) {
+            browserApi.tabs.sendMessage(tabId, message)
+        }
+    })
 }
