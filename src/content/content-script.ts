@@ -34,13 +34,16 @@ browserApi.runtime.onMessage.addListener((message: any) => {
     }
 })
 
-function sendMediaInfo() {
-  const meta = navigator.mediaSession?.metadata;
-  const state = navigator.mediaSession?.playbackState;
+let lastServerIsPlaying: boolean | null = null;
+let commandLockUntil = 0; // timestamp — suppress sendMediaInfo until this time
 
-  // Also check for any playing audio/video element as fallback
+function sendMediaInfo() {
+  if (Date.now() < commandLockUntil) return; // command in progress, don't overwrite
+
+  const meta = navigator.mediaSession?.metadata;
   const mediaEl = document.querySelector<HTMLMediaElement>('audio, video');
-  const isPlaying = state === "playing" || (mediaEl ? !mediaEl.paused : false);
+  const isPlaying = navigator.mediaSession?.playbackState === "playing" 
+    || (mediaEl ? !mediaEl.paused : false);
 
   if (!meta && !mediaEl) return;
 
@@ -56,24 +59,18 @@ function sendMediaInfo() {
   }).catch(() => {});
 }
 
-sendMediaInfo();
-setInterval(sendMediaInfo, 2000);
-
-let lastServerIsPlaying: boolean | null = null;
-
 async function applyServerCommands() {
   try {
     const res = await fetch("http://localhost:3030/api/status");
     const status = await res.json();
 
     const mediaElements = document.querySelectorAll<HTMLMediaElement>('audio, video');
-
-    // Always sync volume — this is safe to apply every tick
     mediaElements.forEach(el => { el.volume = status.volume; });
 
-    // Only apply play/pause if the server state CHANGED since last poll
-    // (meaning someone clicked the Tauri button — not a manual browser action)
     if (lastServerIsPlaying !== null && status.is_playing !== lastServerIsPlaying) {
+      // Lock out sendMediaInfo for 3 seconds so it doesn't fight this command
+      commandLockUntil = Date.now() + 3000;
+
       mediaElements.forEach(el => {
         if (status.is_playing && el.paused) el.play().catch(() => {});
         else if (!status.is_playing && !el.paused) el.pause();
@@ -84,4 +81,6 @@ async function applyServerCommands() {
   } catch (_) {}
 }
 
-setInterval(applyServerCommands, 1000);
+sendMediaInfo();
+setInterval(sendMediaInfo, 2000);
+setInterval(applyServerCommands, 500); // poll more frequently for faster response
