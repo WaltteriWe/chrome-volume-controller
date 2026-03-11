@@ -33,3 +33,51 @@ browserApi.runtime.onMessage.addListener((message: any) => {
         break
     }
 })
+
+function sendMediaInfo() {
+  const meta = navigator.mediaSession?.metadata;
+  const state = navigator.mediaSession?.playbackState;
+
+  // Also check for any playing audio/video element as fallback
+  const mediaEl = document.querySelector<HTMLMediaElement>('audio, video');
+  const isPlaying = state === "playing" || (mediaEl ? !mediaEl.paused : false);
+
+  if (!meta && !mediaEl) return;
+
+  fetch("http://localhost:3030/api/media", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: meta?.title || document.title || "",
+      artist: meta?.artist || "",
+      tab_id: 0,
+      is_playing: isPlaying
+    })
+  }).catch(() => {});
+}
+
+sendMediaInfo();
+setInterval(sendMediaInfo, 2000);
+
+async function applyServerCommands() {
+  try {
+    const res = await fetch("http://localhost:3030/api/status");
+    const status = await res.json();
+
+    const mediaElements = document.querySelectorAll<HTMLMediaElement>('audio, video');
+
+    mediaElements.forEach(el => {
+      // Sync volume from server
+      el.volume = status.volume;
+
+      // Sync play/pause from server
+      if (status.is_playing && el.paused) {
+        el.play().catch(() => {});
+      } else if (!status.is_playing && !el.paused) {
+        el.pause();
+      }
+    });
+  } catch (_) {} // Tauri app not running — silently ignore
+}
+
+setInterval(applyServerCommands, 1000);
