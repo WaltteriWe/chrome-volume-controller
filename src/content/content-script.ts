@@ -59,6 +59,8 @@ function sendMediaInfo() {
 sendMediaInfo();
 setInterval(sendMediaInfo, 2000);
 
+let lastServerIsPlaying: boolean | null = null;
+
 async function applyServerCommands() {
   try {
     const res = await fetch("http://localhost:3030/api/status");
@@ -66,18 +68,20 @@ async function applyServerCommands() {
 
     const mediaElements = document.querySelectorAll<HTMLMediaElement>('audio, video');
 
-    mediaElements.forEach(el => {
-      // Sync volume from server
-      el.volume = status.volume;
+    // Always sync volume — this is safe to apply every tick
+    mediaElements.forEach(el => { el.volume = status.volume; });
 
-      // Sync play/pause from server
-      if (status.is_playing && el.paused) {
-        el.play().catch(() => {});
-      } else if (!status.is_playing && !el.paused) {
-        el.pause();
-      }
-    });
-  } catch (_) {} // Tauri app not running — silently ignore
+    // Only apply play/pause if the server state CHANGED since last poll
+    // (meaning someone clicked the Tauri button — not a manual browser action)
+    if (lastServerIsPlaying !== null && status.is_playing !== lastServerIsPlaying) {
+      mediaElements.forEach(el => {
+        if (status.is_playing && el.paused) el.play().catch(() => {});
+        else if (!status.is_playing && !el.paused) el.pause();
+      });
+    }
+
+    lastServerIsPlaying = status.is_playing;
+  } catch (_) {}
 }
 
 setInterval(applyServerCommands, 1000);
