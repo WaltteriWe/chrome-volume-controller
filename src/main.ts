@@ -23,11 +23,17 @@ app.innerHTML = `
 const slider = document.getElementById('volume-slider') as HTMLInputElement
 const display = document.getElementById('volume-display')!
 
-slider.addEventListener('input', () => {
+slider.addEventListener('input', async () => {
   const value = Number(slider.value)
   display.textContent = `${value}%`
 
-  sendToTab({ type: 'SET_VOLUME', volume: value / 100 })
+  const newVolume = value / 100
+  sendToTab({ type: 'SET_VOLUME', volume: newVolume })
+  await fetch("http://localhost:3030/api/volume", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ volume: newVolume, tab_id: 0 })
+  }).catch(() => {});
 })
 
 document.getElementById('btn-play-pause')!.addEventListener('click', () => {
