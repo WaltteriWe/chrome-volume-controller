@@ -12,9 +12,9 @@ app.innerHTML = `
       <span id="volume-display">100%</span>
     </div>
     <div class="media-controls">
-      <button id="btn-prev" title="Previous">⏮</button>
+      <button id="btn-prev" title="Previous">+10s</button>
       <button id="btn-play-pause" title="Play/Pause">⏯</button>
-      <button id="btn-next" title="Next">⏭</button>
+      <button id="btn-next" title="Next">-10s</button>
       <button id="btn-mute" title="Mute">🔇</button>
     </div>
   </div>

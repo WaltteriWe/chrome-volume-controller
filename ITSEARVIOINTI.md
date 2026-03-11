@@ -30,7 +30,8 @@
 > - Äänenvoimakkuuden säätö per välilehti
 > - Mute/unmute toiminnallisuus
 > 
-> [Jos teit Tauri-osuuden, mainitse se tässä]
+> ** Tauri sovellus **
+
 
 ### Poikkeamat suunnitelmasta
 [Mitä jäi tekemättä tai mitä lisäsit suunnitelman ulkopuolelta?]
@@ -48,9 +49,10 @@
 
 #### Chrome Extension Development (Manifest V3)
 **Mitä opin:**
-- [Kirjoita mitä opit Chrome Extension arkkitehtuurista]
 - [Background service workers vs content scripts]
 - [Chrome API:en käyttö (tabs, storage, tabCapture)]
+- AI työkalujen käyttöä oikea oppisesti
+
 
 **Haasteet:**
 - [Mikä oli vaikeaa?]
@@ -76,6 +78,7 @@
 
 #### [Jos teit Tauri-osuuden] Tauri 2.0 + Rust
 **Mitä opin:**
+
 - [Tauri arkkitehtuuri]
 - [Rust perusteet]
 - [Frontend-backend kommunikaatio]
